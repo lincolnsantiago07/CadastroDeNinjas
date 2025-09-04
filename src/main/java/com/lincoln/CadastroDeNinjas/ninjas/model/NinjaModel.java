@@ -1,5 +1,6 @@
-package com.lincoln.CadastroDeNinjas.model;
+package com.lincoln.CadastroDeNinjas.ninjas.model;
 
+import com.lincoln.CadastroDeNinjas.missoes.MissoesModel;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,12 @@ public class NinjaModel {
     private String nome;
     private String email;
     private int idade;
+
+    //unica um ninja recebe uma unica missao
+    @ManyToMany
+    @JoinColumn(name = "missoes_id") //Foreing Key
+    private MissoesModel missoes;
+
 
     public NinjaModel() {
     }
