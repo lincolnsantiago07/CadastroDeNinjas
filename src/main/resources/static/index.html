@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <title>Guilda da Aldeia — Quadro de Missões</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root{
+            --bg:#0e0f13;
+            --panel:#171922;
+            --ink:#e9e9f0;
+            --muted:#9aa0ac;
+            --accent:#ff7a00;        /* vibe laranja (Naruto) */
+            --accent-2:#c62828;      /* vermelho selo */
+            --accent-3:#00b894;      /* verde sucesso */
+            --line:#2b2f3a;
+            --chip:#222638;
+        }
+        *{ box-sizing:border-box }
+        body{
+            margin:0;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            color:var(--ink);
+            background:
+                    radial-gradient(1000px 600px at 120% -10%, #1a1f2b 0%, transparent 70%),
+                    radial-gradient(900px 500px at -10% 10%, #1b1e27 0%, transparent 70%),
+                    linear-gradient(180deg, #0c0d12 0%, #0e0f13 100%);
+            min-height:100vh;
+        }
+        header{
+            padding:28px 24px;
+            border-bottom:1px solid var(--line);
+            background:
+                    linear-gradient(135deg, rgba(255,122,0,.08), rgba(0,0,0,0) 50%),
+                    linear-gradient(0deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+            display:flex; align-items:center; gap:16px;
+        }
+        .brand{
+            display:flex; align-items:center; gap:12px;
+            font-weight:700; letter-spacing:.3px; font-size:20px;
+        }
+        .brand .mon{
+            width:36px; height:36px; border-radius:50%;
+            background: conic-gradient(from 45deg, var(--accent) 0 25%, #ffb366 0 50%, #f95700 0 75%, var(--accent) 0 100%);
+            box-shadow: 0 0 0 2px #000 inset, 0 6px 16px rgba(0,0,0,.35);
+        }
+        main{ padding:24px; max-width:1200px; margin:0 auto; }
+        .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
+        .card{
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius:16px;
+            padding:16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+        h2{ margin:0 0 12px; font-size:18px; }
+        .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+        button{
+            padding:8px 12px; border-radius:10px; border:1px solid var(--line);
+            background: #1f2330; color:var(--ink); cursor:pointer;
+            transition: .15s ease; font-weight:600;
+        }
+        button:hover{ transform: translateY(-1px); background:#24283a }
+        button.prim{ background: linear-gradient(180deg, #ff8a1a, #f76a00); border-color:#ff7a00; }
+        button.prim:hover{ filter: brightness(1.05) }
+        button.ghost{ background: transparent }
+        table{ width:100%; border-collapse: collapse; margin-top:10px; font-size:14px; }
+        th, td{ padding:10px 8px; border-bottom:1px solid var(--line); vertical-align: middle; }
+        td .row-actions{ display:flex; gap:8px; }
+        input, select{
+            width:100%; background:#151726; color:var(--ink);
+            border:1px solid var(--line); border-radius:10px; padding:8px;
+        }
+        .muted{ color:var(--muted); font-size:12px }
+        .badge{ font-size:12px; padding:4px 8px; border-radius:999px; display:inline-block; background:var(--chip); border:1px solid var(--line); }
+        .ok{ color:#c8f7df; background:#0b2a20; border-color:#154a3a }
+        .warn{ color:#ffe2cc; background:#3a2416; border-color:#5b3318 }
+        .danger{ color:#ffd7d7; background:#3a1717; border-color:#5b1f1f }
+        /* Modal */
+        .modal-back{ position:fixed; inset:0; background: rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:50; }
+        .modal{ width:min(520px, 92vw); background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+        .modal header{ border:0; padding:0 0 12px; background:none; }
+        .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+        .row > div{ display:flex; flex-direction:column; gap:6px; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="mon" aria-hidden="true"></div>
+        <div>Guilda da Aldeia <span class="muted">· Quadro de Missões</span></div>
+    </div>
+</header>
+
+<main>
+    <div class="grid">
+        <!-- MISSÕES -->
+        <section class="card">
+            <h2>Missões</h2>
+            <div class="toolbar">
+                <button id="btnReloadMissoes" class="ghost">Recarregar</button>
+            </div>
+
+            <table id="tblMissoes">
+                <thead>
+                <tr>
+                    <th>ID</th><th>Nome</th><th>Dificuldade</th><th>Status</th><th>Ações</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <h3 style="margin-top:16px">Criar Missão</h3>
+            <div class="row">
+                <div>
+                    <label class="muted">Nome</label>
+                    <input id="missaoNome" placeholder="Escolta ao Daimyo" />
+                </div>
+                <div>
+                    <label class="muted">Dificuldade</label>
+                    <input id="missaoDificuldade" placeholder="A, B, C..." />
+                </div>
+            </div>
+            <div style="margin-top:10px">
+                <button id="btnCriarMissao" class="prim">Criar Missão</button>
+                <span id="msgMissoes" class="muted"></span>
+            </div>
+        </section>
+
+        <!-- NINJAS -->
+        <section class="card">
+            <h2>Ninjas</h2>
+            <div class="toolbar">
+                <button id="btnReloadNinjas" class="ghost">Recarregar</button>
+                <select id="filtroMissao"><option value="">— Filtrar por missão —</option></select>
+                <button id="btnFiltrar" class="ghost">Filtrar</button>
+                <button id="btnLimparFiltro" class="ghost">Limpar</button>
+            </div>
+
+            <table id="tblNinjas">
+                <thead>
+                <tr>
+                    <th>ID</th><th>Nome</th><th>Email</th><th>Idade</th><th>Missão</th><th>Ações</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <h3 style="margin-top:16px">Cadastrar Ninja</h3>
+            <div class="row">
+                <div>
+                    <label class="muted">Nome</label>
+                    <input id="ninjaNome" placeholder="Kakashi" />
+                </div>
+                <div>
+                    <label class="muted">Email</label>
+                    <input id="ninjaEmail" placeholder="kakashi@konoha.com" />
+                </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+                <div>
+                    <label class="muted">Idade</label>
+                    <input id="ninjaIdade" type="number" min="5" value="18" />
+                </div>
+                <div>
+                    <label class="muted">Missão</label>
+                    <select id="ninjaMissao"></select>
+                </div>
+            </div>
+            <div style="margin-top:10px">
+                <button id="btnCriarNinja" class="prim">Cadastrar Ninja</button>
+                <span id="msgNinjas" class="muted"></span>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Modal de edição de Ninja -->
+<div id="editBack" class="modal-back" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+        <header><h3>Editar Ninja</h3></header>
+        <div class="row">
+            <div>
+                <label class="muted">Nome</label>
+                <input id="editNome" />
+            </div>
+            <div>
+                <label class="muted">Email</label>
+                <input id="editEmail" />
+            </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+            <div>
+                <label class="muted">Idade</label>
+                <input id="editIdade" type="number" min="5" />
+            </div>
+            <div>
+                <label class="muted">Missão</label>
+                <select id="editMissao"></select>
+            </div>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end">
+            <button id="btnFechar" class="ghost">Cancelar</button>
+            <button id="btnSalvar" class="prim">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const api = { missoes: '/missoes', ninjas: '/ninjas' };
+    const qs = s => document.querySelector(s);
+    const tblBody = id => qs(id + ' tbody');
+
+    function setMsg(el, msg, ok=false) {
+        el.textContent = msg; el.className = ok ? 'ok badge' : (msg ? 'danger badge' : 'muted');
+        if (msg) setTimeout(() => setMsg(el, ''), 3000);
+    }
+
+    // ---- MISSÕES ----
+    async function carregarMissoes() {
+        const tbody = tblBody('#tblMissoes');
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Carregando...</td></tr>';
+        try {
+            const res = await fetch(api.missoes);
+            const data = await res.json();
+
+            tbody.innerHTML = '';
+            data.forEach(m => {
+                const tr = document.createElement('tr');
+                const status = m.concluida
+                    ? '<span class="badge ok">Concluída</span>'
+                    : '<span class="badge warn">Em aberto</span>';
+                const acao = m.concluida
+                    ? `<button data-del="${m.id}">Excluir</button>`
+                    : `<button data-done="${m.id}">Concluir</button> <button data-del="${m.id}">Excluir</button>`;
+                tr.innerHTML = `
+          <td>${m.id}</td>
+          <td>${m.nome}</td>
+          <td>${m.dificuldade ?? ''}</td>
+          <td>${status}</td>
+          <td class="row-actions">
+            <button data-ver="${m.id}">Ver ninjas</button>
+            ${acao}
+          </td>`;
+                tbody.appendChild(tr);
+            });
+
+            // popular selects
+            const opts = data.map(m => `<option value="${m.id}">${m.nome} (#${m.id})</option>`).join('');
+            qs('#ninjaMissao').innerHTML = opts;
+            qs('#editMissao').innerHTML = opts;
+            qs('#filtroMissao').innerHTML = '<option value="">— Filtrar por missão —</option>' + opts;
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="5" class="danger badge">Erro ao carregar missões</td></tr>`;
+            console.error(e);
+        }
+    }
+
+    async function criarMissao() {
+        const nome = qs('#missaoNome').value.trim();
+        const dificuldade = qs('#missaoDificuldade').value.trim();
+        if (!nome) return setMsg(qs('#msgMissoes'), 'Informe o nome');
+        try {
+            const res = await fetch(api.missoes, { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ nome, dificuldade }) });
+            if (!res.ok) throw new Error(await res.text());
+            setMsg(qs('#msgMissoes'), 'Missão criada!', true);
+            qs('#missaoNome').value = ''; qs('#missaoDificuldade').value = '';
+            await carregarMissoes();
+        } catch (e) { setMsg(qs('#msgMissoes'), 'Falha ao criar'); console.error(e); }
+    }
+
+    async function deletarMissao(id) {
+        if (!confirm('Excluir missão #' + id + '?')) return;
+        const res = await fetch(`${api.missoes}/${id}`, { method:'DELETE' });
+        if (res.status === 204) { await carregarMissoes(); await carregarNinjas(); }
+        else alert('Não foi possível excluir. Exclua os ninjas ou use cascade.');
+    }
+
+    async function concluirMissao(id) {
+        const res = await fetch(`${api.missoes}/${id}/concluir`, { method:'PATCH' });
+        if (res.ok) await carregarMissoes();
+    }
+
+    // ---- NINJAS ----
+    async function carregarNinjas(missaoId=null) {
+        const tbody = tblBody('#tblNinjas');
+        tbody.innerHTML = '<tr><td colspan="6" class="muted">Carregando...</td></tr>';
+        try {
+            const url = missaoId ? `${api.ninjas}/missao/${missaoId}` : api.ninjas;
+            const res = await fetch(url);
+            const data = await res.json();
+            tbody.innerHTML = data.length ? '' : '<tr><td colspan="6" class="muted">Sem registros</td></tr>';
+
+            data.forEach(n => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+          <td>${n.id}</td>
+          <td>${n.nome}</td>
+          <td>${n.email}</td>
+          <td>${n.idade}</td>
+          <td>${n.missaoNome ?? ''} ${n.missaoId ? '(#'+n.missaoId+')' : ''}</td>
+          <td class="row-actions">
+            <button data-edit-ninja='${JSON.stringify(n)}'>Editar</button>
+            <button data-del-ninja="${n.id}">Excluir</button>
+          </td>`;
+                tbody.appendChild(tr);
+            });
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="6" class="danger badge">Erro ao carregar ninjas</td></tr>`;
+            console.error(e);
+        }
+    }
+
+    async function criarNinja() {
+        const nome = qs('#ninjaNome').value.trim();
+        const email = qs('#ninjaEmail').value.trim();
+        const idade = Number(qs('#ninjaIdade').value);
+        const missaoId = Number(qs('#ninjaMissao').value);
+        if (!nome || !email || !missaoId) return setMsg(qs('#msgNinjas'), 'Preencha os campos');
+
+        try {
+            const res = await fetch(api.ninjas, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ nome, email, idade, missaoId })
+            });
+            if (!res.ok) throw new Error(await res.text());
+            setMsg(qs('#msgNinjas'), 'Ninja cadastrado!', true);
+            ['#ninjaNome','#ninjaEmail'].forEach(s => qs(s).value=''); qs('#ninjaIdade').value=18;
+            await carregarNinjas(qs('#filtroMissao').value||null);
+        } catch (e) { setMsg(qs('#msgNinjas'), 'Falha ao cadastrar'); console.error(e); }
+    }
+
+    async function deletarNinja(id) {
+        if (!confirm('Excluir ninja #' + id + '?')) return;
+        const res = await fetch(`${api.ninjas}/${id}`, { method:'DELETE' });
+        if (res.status === 204) await carregarNinjas(qs('#filtroMissao').value||null);
+        else alert('Falha ao excluir ninja.');
+    }
+
+    // ---- Edição de Ninja (modal) ----
+    let editId = null;
+    function abrirModal(n){
+        editId = n.id;
+        qs('#editNome').value = n.nome;
+        qs('#editEmail').value = n.email;
+        qs('#editIdade').value = n.idade;
+        qs('#editMissao').value = n.missaoId ?? '';
+        qs('#editBack').style.display = 'flex';
+        qs('#editBack').setAttribute('aria-hidden','false');
+    }
+    function fecharModal(){
+        qs('#editBack').style.display = 'none';
+        qs('#editBack').setAttribute('aria-hidden','true');
+    }
+    async function salvarEdicao(){
+        const payload = {
+            nome: qs('#editNome').value.trim(),
+            email: qs('#editEmail').value.trim(),
+            idade: Number(qs('#editIdade').value),
+            missaoId: Number(qs('#editMissao').value)
+        };
+        const res = await fetch(`${api.ninjas}/${editId}`, {
+            method:'PUT', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) { fecharModal(); await carregarNinjas(qs('#filtroMissao').value||null); }
+        else alert('Falha ao atualizar ninja.');
+    }
+
+    // ---- Eventos globais ----
+    document.addEventListener('click', (ev) => {
+        const t = ev.target;
+        if (t.matches('[data-del]')) deletarMissao(t.getAttribute('data-del'));
+        if (t.matches('[data-done]')) concluirMissao(t.getAttribute('data-done'));
+        if (t.matches('[data-ver]')) { const id=t.getAttribute('data-ver'); qs('#filtroMissao').value=id; carregarNinjas(id); }
+        if (t.matches('[data-del-ninja]')) deletarNinja(t.getAttribute('data-del-ninja'));
+        if (t.matches('[data-edit-ninja]')) abrirModal(JSON.parse(t.getAttribute('data-edit-ninja')));
+    });
+
+    qs('#btnCriarMissao').addEventListener('click', criarMissao);
+    qs('#btnReloadMissoes').addEventListener('click', carregarMissoes);
+    qs('#btnCriarNinja').addEventListener('click', criarNinja);
+    qs('#btnReloadNinjas').addEventListener('click', () => carregarNinjas());
+    qs('#btnFiltrar').addEventListener('click', () => carregarNinjas(qs('#filtroMissao').value || null));
+    qs('#btnLimparFiltro').addEventListener('click', () => { qs('#filtroMissao').value=''; carregarNinjas(); });
+
+    qs('#btnFechar').addEventListener('click', fecharModal);
+    qs('#btnSalvar').addEventListener('click', salvarEdicao);
+    qs('#editBack').addEventListener('click', (e) => { if (e.target.id==='editBack') fecharModal(); });
+
+    // ---- init ----
+    (async function init(){ await carregarMissoes(); await carregarNinjas(); })();
+</script>
+</body>
+</html>

@@ -23,6 +23,19 @@ public class MissoesController {
         return ResponseEntity.ok(repo.findAll());
     }
 
+    @PatchMapping("/{id}/concluir")
+    public ResponseEntity<MissoesModel> concluir(@PathVariable Long id) {
+        return repo.findById(id)
+                .map(m -> {
+                    if (!m.isConcluida()) {
+                        m.setConcluida(true);
+                        repo.save(m);
+                    }
+                    return ResponseEntity.ok(m);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (!repo.existsById(id)) {

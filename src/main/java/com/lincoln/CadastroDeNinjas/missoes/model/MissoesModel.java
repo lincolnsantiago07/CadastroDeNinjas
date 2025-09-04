@@ -22,6 +22,9 @@ public class MissoesModel {
 
     private String dificuldade;
 
+    @Column(nullable = false)
+    private boolean concluida = false;
+
     // uma missão pode ter vários ninjas
     @OneToMany(mappedBy = "missao", fetch = FetchType.LAZY)
     @JsonManagedReference
